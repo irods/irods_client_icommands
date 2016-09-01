@@ -21,6 +21,11 @@ generateBagIt {
 ### - gets filesize of new tarfile
 ### - outputs report and suggested download procedures
 ### - writes to rodsLog
+
+### - Note that since SHA256 is the default hash scheme in iRODS 
+### - which is base64-encoded, this script demands to set the default 
+### - hash scheme to MD5 on both client and server in order to comply 
+### - with bagit specification
 #
 # -----------------------------------------------------
 
@@ -44,18 +49,32 @@ generateBagIt {
   *NEWBAGITDATA = "*NEWBAGITROOT" ++ "/data";
   *ContInxOld = 1;
   *Condition = "COLL_NAME like '*NEWBAGITDATA%%'";
-  msiMakeGenQuery("DATA_ID, DATA_NAME, COLL_NAME",*Condition,*GenQInp);
+  msiMakeGenQuery("DATA_ID, DATA_NAME, COLL_NAME, DATA_CHECKSUM",*Condition,*GenQInp);
   msiExecGenQuery(*GenQInp, *GenQOut);
   msiGetContInxFromGenQueryOut(*GenQOut,*ContInxNew);
   while(*ContInxOld > 0) {
     foreach(*GenQOut) {
        msiGetValByKey(*GenQOut, "DATA_NAME", *Object);
        msiGetValByKey(*GenQOut, "COLL_NAME", *Coll);
+       msiGetValByKey(*GenQOut, "DATA_CHECKSUM", *CHKSUM);
+       ### - only recalculate checksum when the checksum retrieved from iCAT
+       ### - is empty or not MD5, but sha256 prefixed which is the default hash scheme
+       ### - to accommodate the case that the checksum stored in iCAT might
+       ### - be generated before default hash scheme is changed to MD5
        *FULLPATH = "*Coll" ++ "/" ++ "*Object";
-       msiDataObjChksum(*FULLPATH, "forceChksum=", *CHKSUM);
+       if (strlen(*CHKSUM) > 5) {
+           *PrefixStr = substr(*CHKSUM, 0, 5);
+           if (*PrefixStr == 'sha2:') {
+               msiDataObjChksum(*FULLPATH, "forceChksum=", *CHKSUM);
+           }
+       }
+       else {
+           msiDataObjChksum(*FULLPATH, "forceChksum=", *CHKSUM);
+       }
+
        msiSubstr(*FULLPATH,str(*OFFSET),"null",*RELATIVEPATH);
-       writeString("stdout", *RELATIVEPATH);
-       writeLine("stdout","   *CHKSUM")
+       writeString("stdout", *CHKSUM)
+       writeLine("stdout", "    *RELATIVEPATH")
     }
     *ContInxOld = *ContInxNew;
     if(*ContInxOld > 0) {msiGetMoreRows(*GenQInp,*GenQOut,*ContInxNew);}
@@ -68,12 +87,12 @@ generateBagIt {
   msiFreeBuffer("stdout");
 
   ### - writes tagmanifest file to NEWBAGITROOT/tagmanifest-md5.txt
-  writeString("stdout","bagit.txt    ");
   msiDataObjChksum("*NEWBAGITROOT" ++ "/bagit.txt","forceChksum",*CHKSUM);
-  writeLine("stdout",*CHKSUM);
-  writeString("stdout","manifest-md5.txt    ");
+  writeString("stdout", *CHKSUM);
+  writeLine("stdout","    bagit.txt");
   msiDataObjChksum("*NEWBAGITROOT" ++ "/manifest-md5.txt","forceChksum",*CHKSUM);
-  writeLine("stdout",*CHKSUM);
+  writeString("stdout",*CHKSUM);
+  writeLine("stdout","    manifest-md5.txt");
   msiDataObjCreate("*NEWBAGITROOT" ++ "/tagmanifest-md5.txt","null",*FD);
   msiDataObjWrite(*FD,"stdout",*WLEN);
   msiDataObjClose(*FD,*Status);
