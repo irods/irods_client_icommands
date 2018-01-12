@@ -1337,6 +1337,7 @@ int do_command(
                       << _cmd
                       << std::endl
                       << std::endl;
+            return SYS_INVALID_INPUT_PARAM;
         }
 
         if ( sub_vm.count( "units" ) ) {
@@ -1404,6 +1405,7 @@ int do_command(
                       << _cmd
                       << std::endl
                       << std::endl;
+            return SYS_INVALID_INPUT_PARAM;
         }
 
         if ( sub_vm.count( "units" ) ) {
@@ -1460,6 +1462,7 @@ int do_command(
                       << _cmd
                       << std::endl
                       << std::endl;
+            return SYS_INVALID_INPUT_PARAM;
         }
 
         int status = modAVUMetadata( (char*) _cmd.c_str(),
@@ -1527,6 +1530,7 @@ int do_command(
                       << _cmd
                       << std::endl
                       << std::endl;
+            return SYS_INVALID_INPUT_PARAM;
         } else {
 
             // Issue 3788 - Reject duplicate new attr, val, or unit
@@ -1698,6 +1702,7 @@ int do_command(
                       << _cmd
                       << std::endl
                       << std::endl;
+            return SYS_INVALID_INPUT_PARAM;
         }
 
         if ( sub_vm.count( "new_units" ) ) {
@@ -1759,6 +1764,7 @@ int do_command(
                       << _cmd
                       << std::endl
                       << std::endl;
+            return SYS_INVALID_INPUT_PARAM;
         }
 
         if ( sub_vm.count( "attribute" ) ) {
@@ -1835,6 +1841,7 @@ int do_command(
                       << _cmd
                       << std::endl
                       << std::endl;
+            return SYS_INVALID_INPUT_PARAM;
         }
 
         std::string obj_type = sub_vm["object_type"].as<std::string>();
@@ -1933,6 +1940,7 @@ int do_command(
                       << _cmd
                       << std::endl
                       << std::endl;
+            return SYS_INVALID_INPUT_PARAM;
         }
 
         int status = modCopyAVUMetadata( (char*) _cmd.c_str(),
