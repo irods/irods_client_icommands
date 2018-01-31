@@ -640,7 +640,10 @@ int queryDataObj( const char *cmdToken[] ) {
 
     cmdIx = 5;
     condIx = 2;
-    std::vector<std::string> vstr( condIx );
+
+    // issue 3594 - must preallocate the vector size large enough so that the strings are
+    // not moved as the vector grows.
+    std::vector<std::string> vstr( MAX_CMD_TOKENS );
     while ( strcmp( cmdToken[cmdIx], "and" ) == 0 ) {
         i2a[condIx] = COL_META_DATA_ATTR_NAME;
         cmdIx++;
@@ -745,7 +748,10 @@ int queryCollection( const char *cmdToken[] ) {
 
     cmdIx = 5;
     condIx = 2;
-    std::vector<std::string> vstr( condIx );
+
+    // issue 3594 - must preallocate the vector size large enough so that the strings are
+    // not moved as the vector grows.
+    std::vector<std::string> vstr( MAX_CMD_TOKENS );
     while ( strcmp( cmdToken[cmdIx], "and" ) == 0 ) {
         i2a[condIx] = COL_META_COLL_ATTR_NAME;
         cmdIx++;
@@ -1847,7 +1853,7 @@ int do_command(
         std::string obj_type = sub_vm["object_type"].as<std::string>();
 
         if ( obj_type == "-d" ) {
-            const char *tempCmdToken[40];
+            const char *tempCmdToken[MAX_CMD_TOKENS];
             int i = 0;
             for ( int j = 0; j < MAX_CMD_TOKENS; ++j ) {
                 tempCmdToken[j] = "";
@@ -1862,7 +1868,7 @@ int do_command(
 
             return queryDataObj( tempCmdToken );
         } else if ( obj_type == "-C" ) {
-            const char *tempCmdToken[40];
+            const char *tempCmdToken[MAX_CMD_TOKENS];
             int i = 0;
             for ( int j = 0; j < MAX_CMD_TOKENS; ++j ) {
                 tempCmdToken[j] = "";
