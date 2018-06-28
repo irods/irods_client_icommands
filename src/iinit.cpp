@@ -249,6 +249,59 @@ main( int argc, char **argv ) {
             json_string( my_env.rodsAuthScheme ) );
     }
 
+    // mz_js_20180626+
+    if ( strlen( my_env.rodsClientServerNegotiation ) == 0 ) {
+      if ( !doingEnvFileUpdate ) {
+        doingEnvFileUpdate = true;
+        printUpdateMsg();
+      }
+      printf( "Include default SSL encrypted communication [Y/n]: " );
+      std::string response = "";
+      char inbuf[100];
+      getline( std::cin, response );
+      strncpy( inbuf, response.c_str(), 90 );
+      if ( strncmp( inbuf, "n", 1 ) != 0 || strncmp( inbuf, "N", 1 ) != 0 ) {
+        snprintf(
+		 my_env.rodsClientServerNegotiation,
+		 NAME_LEN,
+		 "%s",
+		 "request_server_negotiation" );
+        json_object_set(
+			json_env,
+			"request_server_negotiation",
+			json_string( my_env.rodsClientServerNegotiation ) );
+
+        snprintf(
+		 my_env.rodsEncryptionAlgorithm,
+		 NAME_LEN,
+		 "%s",
+		 "AES-256-CBC" );
+        json_object_set(
+			json_env,
+			"irods_encryption_algorithm",
+			json_string( my_env.rodsEncryptionAlgorithm ) );
+
+        my_env.rodsEncryptionKeySize = 32;
+        json_object_set(
+			json_env,
+			"irods_encryption_key_size",
+			json_integer( my_env.rodsEncryptionKeySize ) );
+
+        my_env.rodsEncryptionSaltSize = 8;
+        json_object_set(
+			json_env,
+			"irods_encryption_salt_size",
+			json_integer( my_env.rodsEncryptionSaltSize ) );
+
+        my_env.rodsEncryptionNumHashRounds = 16;
+        json_object_set(
+			json_env,
+			"irods_encryption_num_hash_rounds",
+			json_integer( my_env.rodsEncryptionNumHashRounds ) );
+      }
+    }
+    // mz_js_20180626-
+
     if ( doingEnvFileUpdate ) {
         printf( "Those values will be added to your environment file (for use by\n" );
         printf( "other iCommands) if the login succeeds.\n\n" );
