@@ -182,8 +182,8 @@ void
 usage() {
     char *msgs[] = {
         "Usage: iexecmd [-hv] [-p hintPath]|[-P hintPath] [-H hostAddr] command",
-        "Remotely Execute a command installed in the server/bin/cmd directory of ",
-        "the server.",
+        "DEPRECATED - Remotely Execute a command installed in the msiExecCmd_bin",
+        "directory of the server.",
         "The input parameter 'command' is the remote command to execute. Input",
         "arguments  for the command is supported by appending arguments to the",
         "command to be executed. The command and arguments must be in quotes to",
@@ -196,7 +196,7 @@ usage() {
         " -H  hostAddr - the host address where the command will be executed.",
         " -p  hintPath - A full iRODS file path. The command will be executed on",
         "      the host where this file is stored.",
-        " -P  hintPath - Same as the -p option except that the resolved pphysical",
+        " -P  hintPath - Same as the -p option except that the resolved physical",
         "      path from the logical hintPath will be used as the first argument",
         "      the command",
         " -v  verbose",
