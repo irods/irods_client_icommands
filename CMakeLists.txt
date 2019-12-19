@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.5.0 FATAL_ERROR) #CPACK_DEBIAN_<COMPONENT>_PACKAGE_NAME
+cmake_minimum_required(VERSION 3.7.0 FATAL_ERROR) #CPACK_DEBIAN_<COMPONENT>_PACKAGE_NAME
 include(${CMAKE_SOURCE_DIR}/cmake/RequireOutOfSourceBuild.cmake)
 
 find_package(IRODS 4.2.7 EXACT REQUIRED CONFIG)
