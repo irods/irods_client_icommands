@@ -81,6 +81,7 @@ set(
   irsync
   irule
   iscan
+  istream
   isysmeta
   iticket
   itrim
