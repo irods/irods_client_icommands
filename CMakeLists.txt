@@ -85,6 +85,7 @@ set(
   isysmeta
   iticket
   itrim
+  iunreg
   iuserinfo
   ixmsg
   izonereport
