@@ -420,7 +420,7 @@ int main(
 
 
         zmq::message_t req;
-        // wait for the server reponse
+        // wait for the server response
         try {
             zmq_skt.recv( &req );
         }
