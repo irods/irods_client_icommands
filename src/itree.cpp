@@ -11,7 +11,7 @@
 #include "fmt/color.h"
 
 #include "boost/program_options.hpp"
-#include "nlohmann/json.hpp"
+#include "json.hpp"
 
 #include <regex>
 #include <stdexcept>
