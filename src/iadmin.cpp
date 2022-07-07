@@ -46,6 +46,8 @@ int lastCommandStatus = 0;
 
 void usage( char *subOpt );
 
+namespace ixa = irods::experimental::administration;
+
 namespace {
 
 namespace fs = irods::experimental::filesystem;
@@ -242,7 +244,7 @@ auto modify_replica(
                     return 0 == attr.compare(a.first);
                 });
             const auto attr_in_genquery_attrs_and_not_in_denylist{
-                std::cend(genquery_attrs) != attr_pair && 
+                std::cend(genquery_attrs) != attr_pair &&
                 std::none_of(
                     std::cbegin(genquery_attrs_denylist),
                     std::cend(genquery_attrs_denylist),
@@ -1208,6 +1210,28 @@ doCommand( char *cmdToken[], rodsArguments_t* _rodsArgs = 0 ) {
             }
             obfEncodeByKey( buf0, buf1, buf2 );
             cmdToken[3] = buf2;
+        } else if ( strcmp( cmdToken[2], "type" ) == 0 ) {
+            std::vector<ixa::user> admins_in_zone;
+
+            for ( const auto& user : ixa::client::users(*Conn) ) {
+                if ( ixa::user_type::rodsadmin == ixa::client::type(*Conn, user) ) {
+                    admins_in_zone.emplace_back(user);
+                }
+            }
+
+            ixa::user target_user(
+                std::string{cmdToken[1]}
+            );
+
+
+            if ( std::find(
+                    admins_in_zone.begin(),
+                    admins_in_zone.end(),
+                    target_user)
+                    != admins_in_zone.end()
+               ) {
+                THROW(SYS_NOT_ALLOWED, "Cannot downgrade another rodsadmin user in this zone");
+            }
         }
         generalAdmin( 0, "modify", "user", cmdToken[1], cmdToken[2],
                       cmdToken[3], cmdToken[4], cmdToken[5], cmdToken[6], "", "" );
@@ -1421,7 +1445,7 @@ doCommand( char *cmdToken[], rodsArguments_t* _rodsArgs = 0 ) {
             }
         }
         else {
-            if ( strcmp( cmdToken[2], "type" ) == 0 ) { 
+            if ( strcmp( cmdToken[2], "type" ) == 0 ) {
                 // trim spaces in resource type string
                 std::string resc_type( cmdToken[3] );
                 resc_type.erase( std::remove_if( resc_type.begin(), resc_type.end(), ::isspace ), resc_type.end() );
