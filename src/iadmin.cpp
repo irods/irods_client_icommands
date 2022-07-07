@@ -12,6 +12,7 @@
 #include <irods/user_administration.hpp>
 #include <irods/user.hpp>
 #include <irods/get_grid_configuration_value.h>
+#include <irods/irods_query.hpp>
 
 #include <algorithm>
 #include <iostream>
@@ -21,6 +22,7 @@
 #include <unistd.h>
 #include <variant>
 #include <vector>
+#include <optional>
 
 #include <boost/lexical_cast.hpp>
 #include <nlohmann/json.hpp>
@@ -1210,7 +1212,9 @@ doCommand( char *cmdToken[], rodsArguments_t* _rodsArgs = 0 ) {
             }
             obfEncodeByKey( buf0, buf1, buf2 );
             cmdToken[3] = buf2;
-        } else if ( strcmp( cmdToken[2], "type" ) == 0 ) {
+        } else if ( strcmp( cmdToken[2], "type" ) == 0 &&
+                    strcmp( cmdToken[3], "rodsadmin" ) != 0
+                ) {
             std::vector<ixa::user> admins_in_zone;
 
             for ( const auto& user : ixa::client::users(*Conn) ) {
@@ -1219,10 +1223,14 @@ doCommand( char *cmdToken[], rodsArguments_t* _rodsArgs = 0 ) {
                 }
             }
 
-            ixa::user target_user(
-                std::string{cmdToken[1]}
-            );
+            std::string zone_str;
+            for (auto&& row : irods::query{Conn, "select ZONE_NAME where ZONE_TYPE = 'local'"}) {
+                zone_str = row[0];
+                break;
+            }
 
+
+            ixa::user target_user(std::string{cmdToken[1]}, std::make_optional<std::string>(std::move(zone_str)));
 
             if ( std::find(
                     admins_in_zone.begin(),
