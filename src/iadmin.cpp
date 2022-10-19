@@ -6,6 +6,7 @@
 #include "parseCommandLine.h"
 #include "query_builder.hpp"
 #include "rodsClient.h"
+#include "user_administration.hpp"
 
 #include <algorithm>
 #include <array>
@@ -20,7 +21,7 @@
 #include <boost/lexical_cast.hpp>
 #include <fmt/compile.h>
 #include <fmt/format.h>
-#include <nlohmann/json.hpp>
+#include <json.hpp>
 
 #define BIG_STR 3000
 
@@ -295,9 +296,9 @@ auto ls_replica(
     return 0;
 } // ls_replica
 
-constexpr auto is_timestamp_label(std::string_view _label) -> bool
+auto is_timestamp_label(std::string_view _label) -> bool
 {
-    constexpr std::array timestamp_labels{"create_ts", "modify_ts"};
+    static const std::vector<const char*> timestamp_labels{"create_ts", "modify_ts"};
 
     return std::any_of(
         std::cbegin(timestamp_labels), std::cend(timestamp_labels), [&_label](const auto& _l) { return _l == _label; });
@@ -307,12 +308,12 @@ auto print_genquery_result(std::string_view _label, std::string_view _value) -> 
 {
     constexpr const char* fmt_str = "{}: {}\n";
     if (!is_timestamp_label(_label)) {
-        fmt::print(fmt::runtime(fmt_str), _label, _value);
+        fmt::print(fmt_str, _label, _value);
     }
     else {
         char timestamp[TIME_LEN] = "";
         if (const int ec = getLocalTimeFromRodsTime(_value.data(), timestamp); 0 == ec) {
-            fmt::print(fmt::runtime(fmt_str), _label, timestamp);
+            fmt::print(fmt_str, _label, timestamp);
         }
     }
 } // print_genquery_result
@@ -377,8 +378,8 @@ auto show_token(const char* _token_namespace = nullptr, const char* _token = nul
             !_token_namespace || std::string_view{_token_namespace}.empty() ? default_namespace : _token_namespace;
         if (!_token || std::string_view{_token}.empty()) {
             const auto list_token_namespaces =
-                fmt::format(fmt::runtime("select TOKEN_NAME where TOKEN_NAMESPACE = '{}'"), token_namespace);
-            const auto query_string = fmt::format(fmt::runtime(list_token_namespaces), _token_namespace);
+                fmt::format("select TOKEN_NAME where TOKEN_NAMESPACE = '{}'", token_namespace);
+            const auto query_string = fmt::format(list_token_namespaces, _token_namespace);
 
             auto q = irods::query(Conn, query_string);
             if (q.empty()) {
@@ -393,7 +394,7 @@ auto show_token(const char* _token_namespace = nullptr, const char* _token = nul
             return 0;
         }
 
-        constexpr std::array columns{
+        static const std::vector<const char*> columns{
             "TOKEN_NAMESPACE",
             "TOKEN_ID",
             "TOKEN_NAME",
@@ -415,11 +416,11 @@ auto show_token(const char* _token_namespace = nullptr, const char* _token = nul
             "create_ts",
             "modify_ts"};
 
-        const auto query_string_template = fmt::format(
-            FMT_COMPILE("select {} where TOKEN_NAMESPACE = '{{}}' and TOKEN_NAME like '{{}}'"),
+        static const auto query_string_template = fmt::format(
+            "select {} where TOKEN_NAMESPACE = '{{}}' and TOKEN_NAME like '{{}}'",
             fmt::join(columns, ", "));
 
-        print_genquery_results(fmt::format(fmt::runtime(query_string_template), token_namespace, _token), labels);
+        print_genquery_results(fmt::format(query_string_template, token_namespace, _token), labels);
     }
     catch (const irods::exception& e) {
         fmt::print(stderr, e.client_display_what());
@@ -440,7 +441,7 @@ auto show_group(const char* _group = nullptr) -> int
 
             constexpr const char* list_group_members =
                 "select USER_NAME, USER_ZONE where USER_GROUP_NAME = '{}' and USER_TYPE != 'rodsgroup'";
-            const auto query_string = fmt::format(fmt::runtime(list_group_members), _group);
+            const auto query_string = fmt::format(list_group_members, _group);
 
             auto q = irods::query(Conn, query_string);
             if (q.empty()) {
@@ -451,7 +452,7 @@ auto show_group(const char* _group = nullptr) -> int
             for (auto&& result : q) {
                 const auto& user = result.at(0);
                 const auto& zone = result.at(1);
-                fmt::print(fmt::runtime("{}#{}\n"), user, zone);
+                fmt::print("{}#{}\n", user, zone);
             }
         }
         else {
@@ -492,13 +493,13 @@ auto show_resource(const char* _resc = nullptr) -> int
             }
 
             for (auto&& result : q) {
-                fmt::print(fmt::runtime("{}\n"), result.at(0));
+                fmt::print("{}\n", result.at(0));
             }
 
             return 0;
         }
 
-        constexpr std::array columns{
+        static const std::vector<const char*> columns{
             "RESC_ID",
             "RESC_NAME",
             "RESC_ZONE_NAME",
@@ -537,9 +538,9 @@ auto show_resource(const char* _resc = nullptr) -> int
             "resc_parent_context"};
 
         const auto query_string_template =
-            fmt::format(FMT_COMPILE("select {} where RESC_NAME = '{{}}'"), fmt::join(columns, ", "));
+            fmt::format("select {} where RESC_NAME = '{{}}'", fmt::join(columns, ", "));
 
-        print_genquery_results(fmt::format(fmt::runtime(query_string_template), _resc), labels);
+        print_genquery_results(fmt::format(query_string_template, _resc), labels);
     }
     catch (const irods::exception& e) {
         fmt::print(stderr, e.client_display_what());
@@ -563,13 +564,13 @@ auto show_zone(const char* _zone = nullptr) -> int
             }
 
             for (auto&& result : q) {
-                fmt::print(fmt::runtime("{}\n"), result.at(0));
+                fmt::print("{}\n", result.at(0));
             }
 
             return 0;
         }
 
-        constexpr std::array columns{
+        static const std::vector<const char*> columns{
             "ZONE_ID",
             "ZONE_NAME",
             "ZONE_TYPE",
@@ -582,9 +583,9 @@ auto show_zone(const char* _zone = nullptr) -> int
             "zone_id", "zone_name", "zone_type_name", "zone_conn_string", "r_comment", "create_ts", "modify_ts"};
 
         const auto query_string_template =
-            fmt::format(FMT_COMPILE("select {} where ZONE_NAME = '{{}}'"), fmt::join(columns, ", "));
+            fmt::format("select {} where ZONE_NAME = '{{}}'", fmt::join(columns, ", "));
 
-        print_genquery_results(fmt::format(fmt::runtime(query_string_template), _zone), labels);
+        print_genquery_results(fmt::format(query_string_template, _zone), labels);
     }
     catch (const irods::exception& e) {
         fmt::print(stderr, e.client_display_what());
@@ -606,13 +607,13 @@ auto show_user(const char* _user, const char* _zone = nullptr) -> int
             for (auto&& result : irods::query(Conn, query_string)) {
                 const auto& user = result.at(0);
                 const auto& zone = result.at(1);
-                fmt::print(fmt::runtime("{}#{}\n"), user, zone);
+                fmt::print("{}#{}\n", user, zone);
             }
 
             return 0;
         }
 
-        constexpr std::array columns{
+        static const std::vector<const char*> columns{
             "USER_ID",
             "USER_NAME",
             "USER_TYPE",
@@ -626,14 +627,14 @@ auto show_user(const char* _user, const char* _zone = nullptr) -> int
             "user_id", "user_name", "user_type_name", "zone_name", "user_info", "r_comment", "create_ts", "modify_ts"};
 
         static const auto user_query =
-            fmt::format(FMT_COMPILE("select {} where USER_NAME = '{{}}'"), fmt::join(columns, ", "));
+            fmt::format("select {} where USER_NAME = '{{}}'", fmt::join(columns, ", "));
 
         static const auto user_query_with_zone = fmt::format(
-            FMT_COMPILE("select {} where USER_NAME = '{{}}' and USER_ZONE = '{{}}'"), fmt::join(columns, ", "));
+            "select {} where USER_NAME = '{{}}' and USER_ZONE = '{{}}'", fmt::join(columns, ", "));
 
         const auto query_string = _zone && !std::string_view{_zone}.empty()
-                                      ? fmt::format(fmt::runtime(user_query_with_zone), _user, _zone)
-                                      : fmt::format(fmt::runtime(user_query), _user);
+                                      ? fmt::format(user_query_with_zone, _user, _zone)
+                                      : fmt::format(user_query, _user);
 
         print_genquery_results(query_string, labels);
     }
@@ -657,17 +658,17 @@ auto show_user_auth(const char* _user, const char* _zone = nullptr) -> int
             query_string = "select USER_NAME, USER_DN";
         }
         else {
-            constexpr std::array columns{"USER_NAME", "USER_DN"};
+            static const std::vector<const char*> columns{"USER_NAME", "USER_DN"};
 
             static const auto user_query =
-                fmt::format(FMT_COMPILE("select {} where USER_NAME = '{{}}'"), fmt::join(columns, ", "));
+                fmt::format("select {} where USER_NAME = '{{}}'", fmt::join(columns, ", "));
 
             static const auto user_query_with_zone = fmt::format(
-                FMT_COMPILE("select {} where USER_NAME = '{{}}' and USER_ZONE = '{{}}'"), fmt::join(columns, ", "));
+                "select {} where USER_NAME = '{{}}' and USER_ZONE = '{{}}'", fmt::join(columns, ", "));
 
             query_string = _zone && !std::string_view{_zone}.empty()
-                               ? fmt::format(fmt::runtime(user_query_with_zone), _user, _zone)
-                               : fmt::format(fmt::runtime(user_query), _user);
+                               ? fmt::format(user_query_with_zone, _user, _zone)
+                               : fmt::format(user_query, _user);
         }
 
         auto q = irods::query(Conn, query_string);
@@ -700,7 +701,7 @@ auto show_user_auth_name(const char* _auth_name) -> int
 
     try {
         auto q =
-            irods::query(Conn, fmt::format(fmt::runtime("select USER_NAME, USER_DN where USER_DN = '{}'"), _auth_name));
+            irods::query(Conn, fmt::format("select USER_NAME, USER_DN where USER_DN = '{}'", _auth_name));
         if (q.empty()) {
             fmt::print("No rows found\n");
             return 0;
@@ -724,7 +725,7 @@ auto show_user_auth_name(const char* _auth_name) -> int
 auto show_global_quotas(const char* _user_or_group = nullptr) -> int
 {
     try {
-        constexpr std::array columns{
+        static const std::vector<const char*> columns{
             "QUOTA_USER_NAME", "QUOTA_USER_ZONE", "QUOTA_LIMIT", "QUOTA_OVER", "QUOTA_MODIFY_TIME"};
         static const std::vector labels{"user_name", "zone_name", "quota_limit", "quota_over", "modify_ts"};
 
@@ -733,7 +734,7 @@ auto show_global_quotas(const char* _user_or_group = nullptr) -> int
             fmt::print("\nGlobal (total usage) quotas (if any) for users/groups:\n");
 
             const auto query_string =
-                fmt::format(FMT_COMPILE("select {} where QUOTA_RESC_ID = '0'"), fmt::join(columns, ", "));
+                fmt::format("select {} where QUOTA_RESC_ID = '0'", fmt::join(columns, ", "));
 
             print_genquery_results(query_string, labels);
 
@@ -756,11 +757,10 @@ auto show_global_quotas(const char* _user_or_group = nullptr) -> int
         fmt::print("\nGlobal (total usage) quotas (if any) for user/group {}:\n", _user_or_group);
 
         const auto query_string_template = fmt::format(
-            FMT_COMPILE(
-                "select {} where QUOTA_USER_NAME = '{{}}' and QUOTA_USER_ZONE = '{{}}' and QUOTA_RESC_ID = '0'"),
+            "select {} where QUOTA_USER_NAME = '{{}}' and QUOTA_USER_ZONE = '{{}}' and QUOTA_RESC_ID = '0'",
             fmt::join(columns, ", "));
 
-        print_genquery_results(fmt::format(fmt::runtime(query_string_template), user_name, zone_name), labels);
+        print_genquery_results(fmt::format(query_string_template, user_name, zone_name), labels);
     }
     catch (const irods::exception& e) {
         fmt::print(stderr, e.client_display_what());
@@ -776,7 +776,7 @@ auto show_global_quotas(const char* _user_or_group = nullptr) -> int
 auto show_resource_quotas(const char* _user_or_group = nullptr) -> int
 {
     try {
-        constexpr std::array columns{
+        static const std::vector<const char*> columns{
             "QUOTA_USER_NAME", "QUOTA_USER_ZONE", "QUOTA_RESC_NAME", "QUOTA_LIMIT", "QUOTA_OVER", "QUOTA_MODIFY_TIME"};
         static const std::vector labels{
             "user_name", "zone_name", "resc_name", "quota_limit", "quota_over", "modify_ts"};
@@ -786,7 +786,7 @@ auto show_resource_quotas(const char* _user_or_group = nullptr) -> int
             fmt::print("Per resource quotas (if any) for users/groups:\n");
 
             const auto query_string =
-                fmt::format(FMT_COMPILE("select {} where QUOTA_RESC_ID != '0'"), fmt::join(columns, ", "));
+                fmt::format("select {} where QUOTA_RESC_ID != '0'", fmt::join(columns, ", "));
 
             print_genquery_results(query_string, labels);
 
@@ -809,11 +809,10 @@ auto show_resource_quotas(const char* _user_or_group = nullptr) -> int
         fmt::print("Per resource quotas (if any) for user/group {}:\n", _user_or_group);
 
         const auto query_string_template = fmt::format(
-            FMT_COMPILE(
-                "select {} where QUOTA_USER_NAME = '{{}}' and QUOTA_USER_ZONE = '{{}}' and QUOTA_RESC_NAME != '0'"),
+            "select {} where QUOTA_USER_NAME = '{{}}' and QUOTA_USER_ZONE = '{{}}' and QUOTA_RESC_NAME != '0'",
             fmt::join(columns, ", "));
 
-        print_genquery_results(fmt::format(fmt::runtime(query_string_template), user_name, zone_name), labels);
+        print_genquery_results(fmt::format(query_string_template, user_name, zone_name), labels);
     }
     catch (const irods::exception& e) {
         fmt::print(stderr, e.client_display_what());
@@ -1740,11 +1739,11 @@ main( int argc, char **argv ) {
         }
     }
     catch (const irods::exception& e) {
-        rodsLogError(LOG_ERROR, e.code(), e.client_display_what());
+        fmt::print(stderr, e.client_display_what());
         return 7;
     }
     catch (const std::exception& e) {
-        rodsLogError(LOG_ERROR, SYS_UNKNOWN_ERROR, e.what());
+        fmt::print(stderr, e.what());
         return 8;
     }
 
