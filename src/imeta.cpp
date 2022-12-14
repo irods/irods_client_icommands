@@ -47,8 +47,6 @@ int display_help(const std::vector<std::string>& _sub_args);
 
 int do_command(const std::string& _cmd, const std::vector<std::string>& _sub_args);
 
-int do_interactive();
-
 std::tuple<int, std::string> prepare_name(std::string_view object_type, std::string_view name);
 
 po::variables_map parse_sub_args(const std::vector<std::string>& _sub_args,
@@ -1327,6 +1325,7 @@ int do_command(const std::string& _cmd, const std::vector<std::string>& _sub_arg
         std::cerr << "Error: "
                   << "Unrecognized input, too many input tokens"
                   << std::endl;
+        rcDisconnect(Conn);
         exit( 4 );
     }
 
@@ -2155,6 +2154,8 @@ int main( int argc, const char **argv )
         return 2;
     }
 
+    const auto disconnect = irods::at_scope_exit{[] { rcDisconnect(Conn); }};
+
     if ( clientLogin( Conn ) != 0 ) {
         return 3;
     }
@@ -2167,8 +2168,6 @@ int main( int argc, const char **argv )
     }
 
     printErrorStack( Conn->rError );
-
-    rcDisconnect( Conn );
 
     if ( lastCommandStatus != 0 ) {
         return 4;
