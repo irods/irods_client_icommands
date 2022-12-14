@@ -1,16 +1,9 @@
-/*** Copyright (c), The Regents of the University of California            ***
- *** For more information please refer to files in the COPYRIGHT directory ***/
-
-/*
-  This is an interface to the user information (metadata).
-*/
-
-#include "rods.h"
-#include "rodsClient.h"
 #include "irods_client_api_table.hpp"
 #include "irods_pack_table.hpp"
-
 #include "irods_query.hpp"
+#include "rods.h"
+#include "rodsClient.h"
+
 #include <boost/format.hpp>
 
 int debug = 0;
@@ -146,10 +139,12 @@ main( int argc, char **argv ) {
         exit( 2 );
     }
 
+    const auto disconnect = irods::at_scope_exit{[] { rcDisconnect(Conn); }};
+
     status = clientLogin( Conn );
     if ( status != 0 ) {
         if ( !debug ) {
-            exit( 3 );
+            return 3;
         }
     }
 
@@ -165,9 +160,8 @@ main( int argc, char **argv ) {
     }
 
     printErrorStack( Conn->rError );
-    rcDisconnect( Conn );
 
-    exit( status );
+    return status;
 }
 
 /*
