@@ -7,8 +7,11 @@
 
 #include "rods.h"
 #include "rodsClient.h"
+#include "rcMisc.h"
 #include "irods_client_api_table.hpp"
 #include "irods_pack_table.hpp"
+#include "irods_query.hpp"
+#include <boost/format.hpp>
 
 #define MAX_SQL 300
 #define BIG_STR 200
@@ -77,188 +80,53 @@ printGenQueryResults( rcComm_t *Conn, int status, genQueryOut_t *genQueryOut,
 /*
 Via a general query, show rule information
 */
-int
-showRuleExec( char *name, char *ruleName, int allFlag ) {
-    genQueryInp_t genQueryInp;
-    genQueryOut_t *genQueryOut;
+
+namespace {
     int i1a[20];
-    int i1b[20] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
-    int i2a[20];
-    char *condVal[10];
     char v1[BIG_STR];
     char v2[BIG_STR];
-    int i, status;
-    int printCount;
+    int status;
+    int printCount = 0;
     char *columnNames[] = {"id", "name", "rei_file_path", "user_name",
                            "address", "time", "frequency", "priority",
                            "estimated_exe_time", "notification_addr",
                            "last_exe_time", "exec_status"
                           };
 
-    printCount = 0;
-    memset( &genQueryInp, 0, sizeof( genQueryInp_t ) );
 
-    i = 0;
-    i1a[i++] = COL_RULE_EXEC_ID;
-    i1a[i++] = COL_RULE_EXEC_NAME;
-    i1a[i++] = COL_RULE_EXEC_REI_FILE_PATH;
-    i1a[i++] = COL_RULE_EXEC_USER_NAME;
-    i1a[i++] = COL_RULE_EXEC_ADDRESS;
-    i1a[i++] = COL_RULE_EXEC_TIME;
-    i1a[i++] = COL_RULE_EXEC_FREQUENCY;
-    i1a[i++] = COL_RULE_EXEC_PRIORITY;
-    i1a[i++] = COL_RULE_EXEC_ESTIMATED_EXE_TIME;
-    i1a[i++] = COL_RULE_EXEC_NOTIFICATION_ADDR;
-    i1a[i++] = COL_RULE_EXEC_LAST_EXE_TIME;
-    i1a[i++] = COL_RULE_EXEC_STATUS;
+    struct once {
+        int brief_format_len{};
+        int long_format_len{};
 
-    genQueryInp.selectInp.inx = i1a;
-    genQueryInp.selectInp.value = i1b;
-    genQueryInp.selectInp.len = i;
+        once()
+        {
+            int i = 0;
+            i1a[i++] = COL_RULE_EXEC_ID;
+            i1a[i++] = COL_RULE_EXEC_NAME;
 
-    if ( allFlag ) {
-        genQueryInp.sqlCondInp.len = 0;
-    }
-    else {
-        i2a[0] = COL_RULE_EXEC_USER_NAME;
-        snprintf( v1, BIG_STR, "='%s'", name );
-        condVal[0] = v1;
-        genQueryInp.sqlCondInp.inx = i2a;
-        genQueryInp.sqlCondInp.value = condVal;
-        genQueryInp.sqlCondInp.len = 1;
-    }
+            brief_format_len = i;
 
-    if ( ruleName != NULL && *ruleName != '\0' ) {
-        int i;
-        i =  genQueryInp.sqlCondInp.len;
-        /*  i2a[i]=COL_RULE_EXEC_NAME;
-        sprintf(v2,"='%s'",ruleName);  */
-        i2a[i] = COL_RULE_EXEC_ID;
-        snprintf( v2, BIG_STR, "='%s'", ruleName );
-        condVal[i] = v2;
-        genQueryInp.sqlCondInp.len++;
-    }
+            i1a[i++] = COL_RULE_EXEC_REI_FILE_PATH;
+            i1a[i++] = COL_RULE_EXEC_USER_NAME;
+            i1a[i++] = COL_RULE_EXEC_ADDRESS;
+            i1a[i++] = COL_RULE_EXEC_TIME;
+            i1a[i++] = COL_RULE_EXEC_FREQUENCY;
+            i1a[i++] = COL_RULE_EXEC_PRIORITY;
+            i1a[i++] = COL_RULE_EXEC_ESTIMATED_EXE_TIME;
+            i1a[i++] = COL_RULE_EXEC_NOTIFICATION_ADDR;
+            i1a[i++] = COL_RULE_EXEC_LAST_EXE_TIME;
+            i1a[i++] = COL_RULE_EXEC_STATUS;
 
-    genQueryInp.condInput.len = 0;
-
-    genQueryInp.maxRows = 50;
-    genQueryInp.continueInx = 0;
-    status = rcGenQuery( Conn, &genQueryInp, &genQueryOut );
-    if ( status == CAT_NO_ROWS_FOUND ) {
-        if ( ruleName != NULL && *ruleName != '\0' ) {
-            printf( "User %s or rule '%s' does not exist.\n", name, ruleName );
-        }
-        else {
-            i1a[0] = COL_USER_COMMENT;
-            i2a[0] = COL_USER_NAME;
-            genQueryInp.selectInp.len = 1;
-            status = rcGenQuery( Conn, &genQueryInp, &genQueryOut );
-            if ( status == 0 ) {
-                if ( allFlag ) {
-                    printf( "No delayed rules pending\n" );
-                }
-                else {
-                    printf( "No delayed rules pending for user %s\n", name );
-                }
-                return 0;
-            }
-            printf( "User %s does not exist.\n", name );
-            return 0;
+            long_format_len = i;
         }
     }
-
-    if ( allFlag ) {
-        printf( "Pending rule-executions\n" );
-    }
-    else {
-        printf( "Pending rule-executions for user %s\n", name );
-    }
-    printCount += printGenQueryResults( Conn, status, genQueryOut, columnNames, 0 );
-
-    while ( status == 0 && genQueryOut->continueInx > 0 ) {
-        genQueryInp.continueInx = genQueryOut->continueInx;
-        status = rcGenQuery( Conn, &genQueryInp, &genQueryOut );
-        if ( genQueryOut->rowCnt > 0 ) {
-            printf( "----\n" );
-        }
-        printCount += printGenQueryResults( Conn, status, genQueryOut,
-                                            columnNames, 0 );
-    }
-
-    return 0;
+    once_instance;
 }
 
-/*
-Via a general query, show rule information, brief form
-*/
-int
-showRuleExecBrief( char *name, int allFlag ) {
-    genQueryInp_t genQueryInp;
-    genQueryOut_t *genQueryOut;
-    int i1a[20];
-    int i1b[20] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
-    int i2a[20];
-    char *condVal[10];
-    char v1[BIG_STR];
-    int i, status;
-    int printCount;
-
-    memset( &genQueryInp, 0, sizeof( genQueryInp_t ) );
-    printCount = 0;
-    i = 0;
-    i1a[i++] = COL_RULE_EXEC_ID;
-    i1a[i++] = COL_RULE_EXEC_NAME;
-
-    genQueryInp.selectInp.inx = i1a;
-    genQueryInp.selectInp.value = i1b;
-    genQueryInp.selectInp.len = i;
-
-    i2a[0] = COL_RULE_EXEC_USER_NAME;
-    sprintf( v1, "='%s'", name );
-    condVal[0] = v1;
-
-    genQueryInp.sqlCondInp.inx = i2a;
-    genQueryInp.sqlCondInp.value = condVal;
-    genQueryInp.sqlCondInp.len = 1;
-    if ( allFlag ) {
-        genQueryInp.sqlCondInp.len = 0;
-    }
-
-    genQueryInp.condInput.len = 0;
-
-    genQueryInp.maxRows = 50;
-    genQueryInp.continueInx = 0;
-    status = rcGenQuery( Conn, &genQueryInp, &genQueryOut );
-    if ( status == CAT_NO_ROWS_FOUND ) {
-        i1a[0] = COL_USER_COMMENT;
-        i2a[0] = COL_USER_NAME;
-        genQueryInp.selectInp.len = 1;
-        status = rcGenQuery( Conn, &genQueryInp, &genQueryOut );
-        if ( status == 0 ) {
-            if ( allFlag ) {
-                printf( "No delayed rules pending\n" );
-            }
-            else {
-                printf( "No delayed rules pending for user %s\n", name );
-            }
-            return 0;
-        }
-        if ( status == CAT_NO_ROWS_FOUND ) {
-            printf( "User %s does not exist.\n", name );
-            return 0;
-        }
-    }
-    printf( "id     name\n" );
-    printCount += printGenQueryResults( Conn, status, genQueryOut, NULL, 1 );
-
-    while ( status == 0 && genQueryOut->continueInx > 0 ) {
-        genQueryInp.continueInx = genQueryOut->continueInx;
-        status = rcGenQuery( Conn, &genQueryInp, &genQueryOut );
-        printCount += printGenQueryResults( Conn, status, genQueryOut,
-                                            NULL, 1 );
-    }
-    return 0;
-}
+auto show_RuleExec( char *userName, 
+                    const char *ruleName="", 
+                    int allFlag = false, 
+                    bool brief = false ) -> int;
 
 int
 main( int argc, char **argv ) {
@@ -319,18 +187,10 @@ main( int argc, char **argv ) {
     }
 
     nArgs = argc - myRodsArgs.optind;
-    if ( nArgs > 0 ) {
-        status = showRuleExec( userName, argv[myRodsArgs.optind],
-                               myRodsArgs.all );
-    }
-    else {
-        if ( myRodsArgs.longOption == 0 ) {
-            status = showRuleExecBrief( userName, myRodsArgs.all );
-        }
-        else {
-            status = showRuleExec( userName, "", myRodsArgs.all );
-        }
-    }
+    status = show_RuleExec( userName,
+                           nArgs > 0 ? argv[myRodsArgs.optind] : "",
+                           myRodsArgs.all,
+                           myRodsArgs.longOption == 0 );
 
     printErrorStack( Conn->rError );
     rcDisconnect( Conn );
@@ -363,3 +223,84 @@ void usage() {
     }
     printReleaseInfo( "iqstat" );
 }
+
+auto show_RuleExec( char *userName, 
+                    const char *ruleName, 
+                    int allFlag, 
+                    bool brief ) -> int
+{
+    genQueryInp_t genQueryInp{};
+    genQueryOut_t *genQueryOut{};
+
+    auto num_cols_selected = (brief ? once_instance.brief_format_len
+                                    : once_instance.long_format_len);
+
+    for (int i = 0; i < num_cols_selected; i++) {
+        addInxIval(&genQueryInp.selectInp,i1a[i],0);
+    }
+
+    if (!allFlag) {
+        snprintf( v1, BIG_STR, "='%s'", userName );
+        addInxVal(&genQueryInp.sqlCondInp,COL_RULE_EXEC_USER_NAME,v1);
+    }
+
+    std::string diagnostic {""};
+    if (ruleName != NULL && *ruleName != '\0') {
+        diagnostic += (boost::format( " (matching key '%s')" ) % ruleName).str();
+        snprintf( v2, BIG_STR, "='%s'", ruleName );
+        addInxVal(&genQueryInp.sqlCondInp,COL_RULE_EXEC_ID,v2);
+    }
+
+    genQueryInp.maxRows = 50;
+    status = rcGenQuery( Conn, &genQueryInp, &genQueryOut );
+
+    if ( status == CAT_NO_ROWS_FOUND ) {
+        // Determine which table "no rows" refers to: USER or RULE.
+        const std::string query_string = (boost::format("select USER_COMMENT "
+                                          "where USER_NAME = '%s'") % userName).str();
+        irods::query<rcComm_t> qobj{Conn, query_string};
+        int num_users_matching = 0;
+        for (const auto &i : qobj) {
+            (void)i;
+            ++num_users_matching;
+        }
+        if ( num_users_matching != 0 ) {
+            if ( allFlag ) {
+                printf( "No delayed rules%s pending\n", diagnostic.c_str() );
+            }
+            else {
+                printf( "No delayed rules%s pending for user %s\n", diagnostic.c_str(), userName );
+            }
+            return 0;
+        }
+        else {
+            printf( "User %s does not exist.\n", userName );
+            return 0;
+        }
+    }
+
+    if (brief) {
+        printf( "id     name\n" );
+    }
+
+    auto increment_count_and_print_results = [&] {
+       printCount += printGenQueryResults( Conn, status, genQueryOut,
+                                           brief ? NULL: columnNames,
+                                           int{brief} );
+    };
+
+    increment_count_and_print_results();
+
+    while ( status == 0 && genQueryOut->continueInx > 0 ) {
+        genQueryInp.continueInx = genQueryOut->continueInx;
+        status = rcGenQuery( Conn, &genQueryInp, &genQueryOut );
+        if (!brief && genQueryOut->rowCnt > 0 ) {
+            printf( "----\n" );
+        }
+        increment_count_and_print_results();
+        clearGenQueryOut( genQueryOut );
+    }
+    clearGenQueryInp( &genQueryInp );
+    return 0;
+}
+
