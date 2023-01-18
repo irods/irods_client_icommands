@@ -247,7 +247,7 @@ auto show_RuleExec( char *userName,
 
     std::string diagnostic {""};
     if (ruleName != NULL && *ruleName != '\0') {
-        diagnostic += (boost::format( " (matching key '%s')" ) % ruleName).str();
+        diagnostic = (boost::format( " (matching key '%s')" ) % ruleName).str();
         snprintf( v2, BIG_STR, "='%s'", ruleName );
         addInxVal(&genQueryInp.sqlCondInp,COL_RULE_EXEC_ID,v2);
     }
@@ -260,10 +260,10 @@ auto show_RuleExec( char *userName,
         namespace ia = irods::experimental::administration;
         if (ia::client::exists(*Conn, ia::user{userName})) {
             if ( allFlag ) {
-                printf( "No delayed rules%s pending\n", diagnostic.c_str() );
+                printf( "No delayed rules pending%s\n", diagnostic.c_str() );
             }
             else {
-                printf( "No delayed rules%s pending for user %s\n", diagnostic.c_str(), userName );
+                printf( "No delayed rules pending for user %s%s\n", userName, diagnostic.c_str());
             }
             return 0;
         }
