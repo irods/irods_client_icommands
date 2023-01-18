@@ -191,7 +191,7 @@ main( int argc, char **argv ) {
     status = show_RuleExec( userName,
                            nArgs > 0 ? argv[myRodsArgs.optind] : "",
                            myRodsArgs.all,
-                           myRodsArgs.longOption == 0 );
+                           myRodsArgs.longOption == 0 && nArgs == 0 );
 
     printErrorStack( Conn->rError );
     rcDisconnect( Conn );
