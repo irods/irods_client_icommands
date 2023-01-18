@@ -247,7 +247,7 @@ auto show_RuleExec( char *userName,
 
     std::string diagnostic {""};
     if (ruleName != NULL && *ruleName != '\0') {
-        diagnostic = (boost::format( " (matching key '%s')" ) % ruleName).str();
+        diagnostic = (boost::format( " (and matching key '%s')" ) % ruleName).str();
         snprintf( v2, BIG_STR, "='%s'", ruleName );
         addInxVal(&genQueryInp.sqlCondInp,COL_RULE_EXEC_ID,v2);
     }
