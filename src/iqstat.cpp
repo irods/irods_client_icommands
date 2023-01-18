@@ -11,6 +11,7 @@
 #include "irods_client_api_table.hpp"
 #include "irods_pack_table.hpp"
 #include "irods_query.hpp"
+#include "user_administration.hpp"
 #include <boost/format.hpp>
 
 #define MAX_SQL 300
@@ -255,16 +256,9 @@ auto show_RuleExec( char *userName,
     status = rcGenQuery( Conn, &genQueryInp, &genQueryOut );
 
     if ( status == CAT_NO_ROWS_FOUND ) {
-        // Determine which table "no rows" refers to: USER or RULE.
-        const std::string query_string = (boost::format("select USER_COMMENT "
-                                          "where USER_NAME = '%s'") % userName).str();
-        irods::query<rcComm_t> qobj{Conn, query_string};
-        int num_users_matching = 0;
-        for (const auto &i : qobj) {
-            (void)i;
-            ++num_users_matching;
-        }
-        if ( num_users_matching != 0 ) {
+        // Need to determine which table "no rows" refers to: USER or RULE.
+        namespace ia = irods::experimental::administration;
+        if (ia::client::exists(*Conn, ia::user{userName})) {
             if ( allFlag ) {
                 printf( "No delayed rules%s pending\n", diagnostic.c_str() );
             }
