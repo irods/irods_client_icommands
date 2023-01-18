@@ -13,6 +13,7 @@
 #include "irods_query.hpp"
 #include "user_administration.hpp"
 #include <boost/format.hpp>
+#include <stdexcept>
 
 #define MAX_SQL 300
 #define BIG_STR 200
@@ -21,10 +22,12 @@ char cwd[BIG_STR];
 
 int debug = 0;
 
-rcComm_t *Conn;
+rcComm_t *Conn {};
 rodsEnv myEnv;
 
 void usage();
+
+auto genQuery_key_to_long(const std::string & s) -> unsigned long;
 
 /*
  print the results of a general query.
@@ -153,48 +156,59 @@ main( int argc, char **argv ) {
         return 0;
     }
 
-    status = getRodsEnv( &myEnv );
-    if ( status < 0 ) {
-        rodsLog( LOG_ERROR, "main: getRodsEnv error. status = %d",
-                 status );
-        return 1;
-    }
-
-    if ( myRodsArgs.user ) {
-        snprintf( userName, sizeof( userName ), "%s", myRodsArgs.userString );
-    }
-    else {
-        snprintf( userName, sizeof( userName ), "%s", myEnv.rodsUserName );
-    }
-
-    // =-=-=-=-=-=-=-
-    // initialize pluggable api table
-    irods::api_entry_table&  api_tbl = irods::get_client_api_table();
-    irods::pack_entry_table& pk_tbl  = irods::get_pack_table();
-    init_api_table( api_tbl, pk_tbl );
-
-    Conn = rcConnect( myEnv.rodsHost, myEnv.rodsPort, myEnv.rodsUserName,
-                      myEnv.rodsZone, 0, &errMsg );
-
-    if ( Conn == NULL ) {
-        return 2;
-    }
-
-    status = clientLogin( Conn );
-    if ( status != 0 ) {
-        if ( !debug ) {
-            return 3;
+    try {
+        status = getRodsEnv( &myEnv );
+        if ( status < 0 ) {
+            rodsLog( LOG_ERROR, "main: getRodsEnv error. status = %d",
+                     status );
+            return 1;
         }
+
+        if ( myRodsArgs.user ) {
+            snprintf( userName, sizeof( userName ), "%s", myRodsArgs.userString );
+        }
+        else {
+            snprintf( userName, sizeof( userName ), "%s", myEnv.rodsUserName );
+        }
+
+        // =-=-=-=-=-=-=-
+        // initialize pluggable api table
+        irods::api_entry_table&  api_tbl = irods::get_client_api_table();
+        irods::pack_entry_table& pk_tbl  = irods::get_pack_table();
+        init_api_table( api_tbl, pk_tbl );
+
+        Conn = rcConnect( myEnv.rodsHost, myEnv.rodsPort, myEnv.rodsUserName,
+                          myEnv.rodsZone, 0, &errMsg );
+
+        if ( Conn == NULL ) {
+            return 2;
+        }
+
+        status = clientLogin( Conn );
+        if ( status != 0 ) {
+            if ( !debug ) {
+                return 3;
+            }
+        }
+
+        nArgs = argc - myRodsArgs.optind;
+        (void) genQuery_key_to_long( argv[myRodsArgs.optind] );
+
+        status = show_RuleExec( userName,
+                               nArgs > 0 ? argv[myRodsArgs.optind] : "",
+                               myRodsArgs.all,
+                               myRodsArgs.longOption == 0 && nArgs == 0 );
+
+        printErrorStack( Conn->rError );
+    }
+    catch (const irods::exception & e) {
+        fprintf(stderr, "Error: %s\n", e.client_display_what());
+        status = 1;
     }
 
-    nArgs = argc - myRodsArgs.optind;
-    status = show_RuleExec( userName,
-                           nArgs > 0 ? argv[myRodsArgs.optind] : "",
-                           myRodsArgs.all,
-                           myRodsArgs.longOption == 0 && nArgs == 0 );
-
-    printErrorStack( Conn->rError );
-    rcDisconnect( Conn );
+    if (Conn) {
+        rcDisconnect( Conn );
+    }
 
     return status;
 }
@@ -298,3 +312,18 @@ auto show_RuleExec( char *userName,
     return 0;
 }
 
+auto genQuery_key_to_long(const std::string & s) -> unsigned long 
+{
+    try {
+        return std::stoul(s);
+    }
+    catch(const std::invalid_argument&){
+        THROW(SYS_INVALID_INPUT_PARAM, "Delayed task ID has incorrect format.");
+    }
+    catch(const std::out_of_range&){
+        THROW(SYS_INVALID_INPUT_PARAM, "Delayed task ID is too large.");
+    }
+    catch(...){
+        THROW(SYS_INVALID_INPUT_PARAM, "Unknown error parsing task ID.");
+    }
+}
