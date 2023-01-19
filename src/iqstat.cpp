@@ -12,6 +12,8 @@
 #include "irods_pack_table.hpp"
 #include "irods_query.hpp"
 #include "user_administration.hpp"
+
+#include <boost/algorithm/string/trim.hpp>
 #include <boost/format.hpp>
 #include <stdexcept>
 
@@ -27,7 +29,7 @@ rodsEnv myEnv;
 
 void usage();
 
-auto genQuery_key_to_long(const std::string & s) -> unsigned long;
+auto genQuery_id_string_to_ulong(const std::string & s) -> unsigned long;
 
 /*
  print the results of a general query.
@@ -191,8 +193,9 @@ main( int argc, char **argv ) {
             }
         }
 
-        nArgs = argc - myRodsArgs.optind;
-        (void) genQuery_key_to_long( argv[myRodsArgs.optind] );
+        if (nArgs = argc - myRodsArgs.optind; nArgs > 0) {
+            static_cast<void>(genQuery_id_string_to_ulong( argv[myRodsArgs.optind]));
+        }
 
         status = show_RuleExec( userName,
                                nArgs > 0 ? argv[myRodsArgs.optind] : "",
@@ -312,10 +315,12 @@ auto show_RuleExec( char *userName,
     return 0;
 }
 
-auto genQuery_key_to_long(const std::string & s) -> unsigned long 
+auto genQuery_id_string_to_ulong(const std::string & key) -> unsigned long
 {
+    std::string k{key};
+    boost::algorithm::trim(k);
     try {
-        return std::stoul(s);
+        return std::stoul(k);
     }
     catch(const std::invalid_argument&){
         THROW(SYS_INVALID_INPUT_PARAM, "Delayed task ID has incorrect format.");
