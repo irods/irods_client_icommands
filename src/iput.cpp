@@ -1,27 +1,39 @@
-/*** Copyright (c), The Regents of the University of California            ***
- *** For more information please refer to files in the COPYRIGHT directory ***/
-/*
- * iput - The irods put utility
-*/
-
-#include <irods/rodsClient.h>
-#include <irods/parseCommandLine.h>
-#include <irods/rodsPath.h>
-#include <irods/putUtil.h>
-#include <irods/rcGlobalExtern.h>
 #include <irods/irods_client_api_table.hpp>
 #include <irods/irods_pack_table.hpp>
 #include <irods/irods_parse_command_line_options.hpp>
+#include <irods/parseCommandLine.h>
+#include <irods/putUtil.h>
+#include <irods/rcGlobalExtern.h>
+#include <irods/rodsClient.h>
+#include <irods/rodsPath.h>
 
 void usage( FILE* );
+
+namespace
+{
+    rcComm_t* conn;
+
+    auto disconnect_and_exit(int _signal) -> void
+    {
+        // If the process is interrupted, make sure to disconnect from the server so that the service agent properly
+        // finalizes any dangling transfers.
+        rcDisconnect(conn);
+
+        // putUtil handles the parallel transfer threads, so the connections cannot be closed from iput. Therefore, the
+        // server will still show SYS_HEADER_READ_LEN_ERR once this process exits. There may be some inconsistency in
+        // results at this point because the writing threads may finish up in the time between disconnecting and this
+        // process exiting.
+        exit(1);
+    } // disconnect_and_exit
+} // anonymous namespace
 
 int
 main( int argc, char **argv ) {
 
     signal( SIGPIPE, SIG_IGN );
+    signal(SIGINT, disconnect_and_exit);
 
     rErrMsg_t errMsg;
-    rcComm_t *conn;
     rodsArguments_t myRodsArgs;
     rodsPathInp_t rodsPathInp;
     int reconnFlag;
