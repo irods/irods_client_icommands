@@ -13,7 +13,6 @@
 #include "boost/program_options.hpp"
 #include "json.hpp"
 
-#include <cassert>
 #include <regex>
 #include <stdexcept>
 #include <string>
