@@ -184,6 +184,7 @@ set(
   iqdel
   iqmod
   iqstat
+  iquery
   iquest
   iquota
   ireg
