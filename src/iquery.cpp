@@ -21,7 +21,7 @@ auto print_columns_info() -> void;
 
 int main(int _argc, char* _argv[]) // NOLINT(modernize-use-trailing-return-type)
 {
-    set_ips_display_name("iquery (experimental)");
+    set_ips_display_name("iquery");
 
     namespace po = boost::program_options;
 
@@ -96,18 +96,7 @@ int main(int _argc, char* _argv[]) // NOLINT(modernize-use-trailing-return-type)
             }
         }};
 
-#if 0
-        const auto ec =
-                procApiRequest(static_cast<RcComm*>(conn),
-                           IRODS_APN_GENQUERY2,
-                           &input,
-                           nullptr,
-                           reinterpret_cast<void**>(&sql), // NOLINT(cppcoreguidelines-pro-type-reinterpret-cast)
-                           nullptr);
-#else
         const auto ec = rc_genquery2(static_cast<RcComm*>(conn), &input, &sql);
-#endif
-
         if (ec != 0) {
             fmt::print(stderr, "error: {}\n", ec);
             return 1;
@@ -154,7 +143,7 @@ Options:
   -h, --help            Display this help message and exit.
 )_");
 
-	char name[] = "iquery (experimental)";
+	char name[] = "iquery";
 	printReleaseInfo(name);
 } // print_usage_info
 
