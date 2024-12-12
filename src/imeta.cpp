@@ -2243,7 +2243,8 @@ void usageMain() {
         " ls   -[l]d|C|R|u Name [AttName] (List existing AVUs for item Name)",
         " lsw  -[l]d|C|R|u Name [AttName] ([Deprecated] List existing AVUs, use",
         "                                  Wildcards)",
-        " qu   -d|C|R|u AttName Operator AttVal [...] (Query objects with matching AVUs)",
+        " qu   -d|C|R|u AttName Operator AttVal [...] ([Deprecated] Query objects with",
+        "                                              matching AVUs)",
         " cp   -d|C|R|u -d|C|R|u Name1 Name2 (Copy AVUs from item Name1 to Name2)",
         " upper (Toggle between upper case mode for queries (qu))",
         " ",
@@ -2289,6 +2290,8 @@ void usageMain() {
         "data object, user, or resource.",
         " ",
         "Try 'help command' for more help on a specific command.",
+        " ",
+        "Note: qu is deprecated. Use GenQuery (iquest or iquery) instead.",
         "'help qu' will explain additional options on the query.",
         ""
     };
@@ -2505,6 +2508,9 @@ usage( const char *subOpt ) {
         if ( strcmp( subOpt, "qu" ) == 0 ) {
             char *msgs[] = {
                 " qu -d|C|R|u AttName Operator AttVal [...] (Query objects with matching AVUs)",
+                " ",
+                "This command is deprecated. Use GenQuery (iquest or iquery) instead.",
+                " ",
                 "Query across AVUs for the specified type of item",
                 "Example: qu -d distance '<=' 12",
                 " ",
