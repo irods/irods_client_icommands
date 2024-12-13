@@ -2204,6 +2204,7 @@ int main( int argc, const char **argv )
     }
 
     if ( command_mode ) {
+        printf("NOTE: Interactive mode is deprecated and will be removed in an upcoming release.\n");
         // No command entered; run in interactive mode
         do_interactive();
     } else {
@@ -2272,6 +2273,7 @@ void usageMain() {
         "be used for matching object names.  This is currently implemented only",
         "for data-objects (-d).",
         " ",
+        "Note: Interactive mode is deprecated.",
         "A blank execute line invokes the interactive mode, where imeta",
         "prompts and executes commands until 'quit' or 'q' is entered.",
         "Like other unix utilities, a series of commands can be piped into it:",
