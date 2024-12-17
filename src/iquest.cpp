@@ -172,7 +172,10 @@ queryAndShowStrCond( rcComm_t *conn, char *hint, char *format,
     int i;
 
     memset( &genQueryInp, 0, sizeof( genQueryInp_t ) );
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
     i = fillGenQueryInpFromStrCond( selectConditionString, &genQueryInp );
+#pragma GCC diagnostic pop
     if ( i < 0 ) {
         return i;
     }
