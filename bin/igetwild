@@ -19,6 +19,8 @@
 if [ "$1" ]; then
   collName="$1"
 else
+  echo "NOTE: ${0##*/} is deprecated."
+  echo
   echo "This simple script allows you to iget a set of files"
   echo "using wildcard type matching on file names."
   echo "This is just a interim partial solution while we develop a more"
@@ -30,6 +32,8 @@ else
 fi
 
 if [ "$collName" = "-h" ]; then
+  echo "NOTE: ${0##*/} is deprecated."
+  echo
   echo "Get one or more iRODS files using wildcard characters."
   echo "Usage: igetwild collection pattern b|m|e  (beginning, middle, or end)"
   echo "Will prompt for missing items."
