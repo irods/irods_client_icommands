@@ -35,7 +35,7 @@ printMainHelp() {
         "igroupadmin  - perform group-admin functions: mkuser, add/remove from group, etc.",
         "ihelp        - display a synopsis list of the iCommands.",
         "iinit        - initialize a session, so you don't need to retype your password.",
-        "ilocate      - searches the local zone for data objects.",
+        "ilocate      - [Deprecated] searches the local zone for data objects.",
         "ils          - list Collections (directories) and Data Objects (files).",
         "ilsresc      - list iRODS resources.",
         "imcoll       - manage mounted collections and associated cache.",

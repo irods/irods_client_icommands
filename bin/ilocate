@@ -6,6 +6,8 @@ if [ $# -eq 0 ] || [ "$1" == "-h" ]
 then
     echo "Usage: ilocate [options] searchPattern [searchPattern] [searchPattern] ..."
     echo 
+    echo "NOTE: ${0##*/} is deprecated."
+    echo 
     echo "Search through the local Zone for data-object(s) with fullpaths with components"
     echo "which match the provided search pattern.  Use '%' as a "
     echo "wildcard (emulates the sql 'like' operand).  If you need to express"
