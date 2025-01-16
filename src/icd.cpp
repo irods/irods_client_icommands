@@ -55,7 +55,7 @@ main( int argc, char **argv ) {
     }
 
     rodsPath_t rodsPath{};
-    irods::at_scope_exit freePath{[&rodsPath]{ clearRodsPathInp(&rodsPath); }};
+    irods::at_scope_exit freePath{[&rodsPath]{ clearRodsPath(&rodsPath); }};
     rstrcpy( rodsPath.inPath, argv[ix], MAX_NAME_LEN );
     parseRodsPath( &rodsPath, &myEnv );
 
