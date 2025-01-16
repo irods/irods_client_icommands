@@ -21,7 +21,6 @@ main( int argc, char **argv ) {
     rcComm_t *conn;
     rodsArguments_t myRodsArgs;
     char *optStr;
-    rodsPathInp_t rodsPathInp;
 
 
     optStr = "hKfarMR:vVn:Z";
@@ -49,6 +48,8 @@ main( int argc, char **argv ) {
         exit( 1 );
     }
 
+    rodsPathInp_t rodsPathInp{};
+    irods::at_scope_exit freePath{[&rodsPathInp]{ clearRodsPath(rodsPathInp); }};
     status = parseCmdLinePath( argc, argv, optind, &myEnv,
                                UNKNOWN_OBJ_T, NO_INPUT_T, 0, &rodsPathInp );
 
