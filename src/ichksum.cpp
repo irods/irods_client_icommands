@@ -49,7 +49,7 @@ main( int argc, char **argv ) {
     }
 
     rodsPathInp_t rodsPathInp{};
-    irods::at_scope_exit freePath{[&rodsPathInp]{ freeRodsPathInp(&rodsPathInp); }};
+    irods::at_scope_exit freePath{[&rodsPathInp]{ freeRodsPathInpMembers(&rodsPathInp); }};
     status = parseCmdLinePath( argc, argv, optind, &myEnv,
                                UNKNOWN_OBJ_T, NO_INPUT_T, 0, &rodsPathInp );
 
