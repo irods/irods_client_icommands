@@ -37,7 +37,7 @@ main( int argc, char **argv ) {
     }
 
     rodsPathInp_t rodsPathInp{};
-    irods::at_scope_exit freePath{[&rodsPathInp] { clearRodsPath(rodsPathInp); }};
+    irods::at_scope_exit freePath{[&rodsPathInp] { clearRodsPath(&rodsPathInp); }};
     int p_err = parse_opts_and_paths(
                     argc,
                     argv,
