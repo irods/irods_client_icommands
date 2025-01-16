@@ -94,7 +94,7 @@ main( int argc, char **argv ) {
     }
 
     rodsPathInp_t rodsPathInp{};
-	irods::at_scope_exit freePath{[&rodsPathInp] { clearRodsPathInp(&rodsPathInp); }};
+	irods::at_scope_exit freePath{[&rodsPathInp] { freeRodsPathInp(&rodsPathInp); }};
     status = parse_command_line_path(argc, argv, optind, &myEnv, srcType,
                                      destType, 0, &rodsPathInp, &myRodsArgs);
 
