@@ -27,7 +27,7 @@ main( int argc, char **argv ) {
     rErrMsg_t errMsg;
     rcComm_t *conn;
     rodsArguments_t myRodsArgs;
-    char *optStr;
+    char* optStr;
     int reconnFlag;
 
 
