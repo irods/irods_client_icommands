@@ -2071,7 +2071,6 @@ void usageMain() {
         "      (modify AVU; new name (n:), value(v:), and/or units(u:)",
         " set  -d|C|R|u Name AttName newValue [newUnits] (Assign a single value)",
         " ls   -[l]d|C|R|u Name [AttName] (List existing AVUs for item Name)",
-        " qu   -d|C|R|u AttName Operator AttVal [...] (Query objects with matching AVUs)",
         " cp   -d|C|R|u -d|C|R|u Name1 Name2 (Copy AVUs from item Name1 to Name2)",
         " ",
         "Metadata attribute-value-units triples (AVUs) consist of an Attribute-Name,",
