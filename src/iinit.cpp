@@ -158,7 +158,7 @@ namespace
         std::getline(std::cin, response);
 
         if (!response.empty()) {
-            std::strncpy(_setting, response.c_str(), _len);
+            std::strncpy(_setting, response.c_str(), _len - 1);
         }
     } // set_env_from_prompt
 
@@ -172,10 +172,10 @@ namespace
         std::getline(std::cin, response);
 
         if (!response.empty()) {
-            std::strncpy(_setting, response.c_str(), _len);
+            std::strncpy(_setting, response.c_str(), _len - 1);
         }
         else if (!env_has_value) {
-            std::strncpy(_setting, default_value, _len);
+            std::strncpy(_setting, default_value, _len - 1);
         }
     } // set_env_from_prompt
 
@@ -245,12 +245,6 @@ namespace
         constexpr const char* default_client_server_policy = "CS_NEG_REQUIRE";
         std::strncpy(_env.rodsClientServerPolicy, default_client_server_policy, sizeof(_env.rodsClientServerPolicy));
         _json_env[irods::KW_CFG_IRODS_CLIENT_SERVER_POLICY] = _env.rodsClientServerPolicy;
-
-        // If the user indicated that TLS is going to be used, this setting is required, so no prompt is shown.
-        constexpr const char* default_server_negotiation = "request_server_negotiation";
-        std::strncpy(
-            _env.rodsClientServerNegotiation, default_server_negotiation, sizeof(_env.rodsClientServerNegotiation));
-        _json_env[irods::KW_CFG_IRODS_CLIENT_SERVER_NEGOTIATION] = _env.rodsClientServerNegotiation;
 
         constexpr const char* default_server_verification = "hostname";
         constexpr const char* server_verification_prompt = "Enter the server verification level";
@@ -371,7 +365,7 @@ int main( int argc, char **argv )
         configure_auth_scheme_in_env(my_env, json_env);
     }
     else if (0 == std::strlen(my_env.rodsAuthScheme)) {
-        std::strncpy(my_env.rodsAuthScheme, NATIVE_SCHEME, std::strlen(NATIVE_SCHEME));
+        std::strncpy(my_env.rodsAuthScheme, NATIVE_SCHEME, sizeof(rodsEnv::rodsAuthScheme) - 1);
     }
 
     if (configure_tls) {
