@@ -171,7 +171,7 @@ namespace
         std::getline(std::cin, response);
 
         if (!response.empty()) {
-            std::strncpy(_setting, response.c_str(), _len);
+            std::strncpy(_setting, response.c_str(), _len - 1);
         }
     } // set_env_from_prompt
 
@@ -185,10 +185,10 @@ namespace
         std::getline(std::cin, response);
 
         if (!response.empty()) {
-            std::strncpy(_setting, response.c_str(), _len);
+            std::strncpy(_setting, response.c_str(), _len - 1);
         }
         else if (!env_has_value) {
-            std::strncpy(_setting, default_value, _len);
+            std::strncpy(_setting, default_value, _len - 1);
         }
     } // set_env_from_prompt
 
@@ -247,13 +247,13 @@ namespace
     {
         // If the user indicated that SSL is going to be used, this setting is required, so no prompt is shown.
         constexpr const char* default_client_server_policy = "CS_NEG_REQUIRE";
-        std::strncpy(_env.rodsClientServerPolicy, default_client_server_policy, sizeof(_env.rodsClientServerPolicy));
+        std::strncpy(_env.rodsClientServerPolicy, default_client_server_policy, sizeof(_env.rodsClientServerPolicy) - 1);
         _json_env[irods::KW_CFG_IRODS_CLIENT_SERVER_POLICY] = _env.rodsClientServerPolicy;
 
         // If the user indicated that SSL is going to be used, this setting is required, so no prompt is shown.
         constexpr const char* default_server_negotiation = "request_server_negotiation";
         std::strncpy(
-            _env.rodsClientServerNegotiation, default_server_negotiation, sizeof(_env.rodsClientServerNegotiation));
+            _env.rodsClientServerNegotiation, default_server_negotiation, sizeof(_env.rodsClientServerNegotiation) - 1);
         _json_env[irods::KW_CFG_IRODS_CLIENT_SERVER_NEGOTIATION] = _env.rodsClientServerNegotiation;
 
         constexpr const char* default_server_verification = "hostname";
