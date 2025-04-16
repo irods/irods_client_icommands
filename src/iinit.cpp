@@ -90,17 +90,7 @@ namespace
 
     auto scheme_uses_iinit_password_prompt(const std::string_view _scheme) -> bool
     {
-        const std::initializer_list<const std::string_view> no_password_prompt = {
-            AUTH_OPENID_SCHEME,
-            irods::AUTH_GSI_SCHEME,
-            irods::AUTH_PAM_SCHEME,
-            PAM_PASSWORD_SCHEME,
-            PAM_INTERACTIVE_SCHEME
-        };
-
-        return std::none_of(std::cbegin(no_password_prompt),
-                            std::cend(no_password_prompt),
-                            [&_scheme](const auto& _s) { return _scheme == _s; });
+        return irods::AUTH_NATIVE_SCHEME.c_str() == _scheme;
     } // scheme_uses_iinit_password_prompt
 
     auto save_updates_to_irods_environment(const nlohmann::json& _update) -> void
@@ -530,10 +520,9 @@ int main( int argc, char **argv )
             }
         }
         else {
-            auto ctx = nlohmann::json{
-                {irods::AUTH_TTL_KEY, std::to_string(ttl)},
-                {irods_auth::force_password_prompt, true}
-            };
+            auto ctx =
+                nlohmann::json{{irods::AUTH_TTL_KEY, std::to_string(ttl)},
+                               {irods_auth::force_password_prompt, !scheme_uses_iinit_password_prompt(lower_scheme)}};
 
             // Use the scheme override here to ensure that the authentication scheme in the environment is the same as
             // the authentication scheme configured here. If the scheme in the environment and the scheme configured in
