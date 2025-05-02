@@ -31,7 +31,7 @@ main( int argc, char **argv ) {
     int reconnFlag;
 
 
-    optStr = "QhfkKN:p:PrR:TvVX:";
+    optStr = "QhfkKN:PrR:TvVX:";
 
     status = parseCmdLineOpt( argc, argv, optStr, 0, &myRodsArgs );
     if ( status ) {
@@ -117,8 +117,8 @@ usage() {
     int i;
 
     char *msgs[] = {
-        "Usage: icp [-fkKPQrTvV] [-N numThreads] [-p physicalPath] [-R resource]",
-        "-X restartFile] srcDataObj|srcColl ...  destDataObj|destColl",
+        "Usage: icp [-fkKPQrTvV] [-N numThreads] [-R resource]",
+        "[-X restartFile] srcDataObj|srcColl ...  destDataObj|destColl",
         "icp copies an irods data-object (file) or collection (directory) to another",
         "data-object or collection.",
         " ",
@@ -150,8 +150,6 @@ usage() {
         " -K verify checksum - calculate and verify the checksum on the data",
         " -N number  specifies the number of I/O threads to use, by default a rule",
         "            is used to determine the best value.",
-        " -p physicalPath  specifies the path on the storage resource on which to store.",
-        "        Normally, you let the irods system automatically determine this.",
         " -P  output the progress of the copy.",
         " -R resource - specifies the resource to store to. This can also be specified",
         "        in your environment or via a rule set up by the administrator.",
