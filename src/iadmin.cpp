@@ -387,7 +387,7 @@ auto modify_replica(
                     return 0 == attr.compare(a.first);
                 });
             const auto attr_in_genquery_attrs_and_not_in_denylist{
-                std::cend(genquery_attrs) != attr_pair && 
+                std::cend(genquery_attrs) != attr_pair &&
                 std::none_of(
                     std::cbegin(genquery_attrs_denylist),
                     std::cend(genquery_attrs_denylist),
@@ -451,75 +451,6 @@ auto modify_replica(
     }
     return 0;
 } // modify_replica
-
-auto ls_replica(
-    char** tokens) -> int
-{
-    try {
-        const auto args = get_args_vector(tokens, 5);
-        std::stringstream q_str;
-        q_str << "select";
-        for (auto c = std::begin(genquery_attrs); c != std::end(genquery_attrs); ++c) {
-            q_str << " " << c->first;
-            if (std::next(c) != std::end(genquery_attrs)) {
-                q_str << ",";
-            }
-        }
-
-        const auto data_object_option = get_data_object_value(args[1], args[2]);
-        if (const auto id = std::get_if<data_id_t>(&data_object_option)) {
-            q_str << " where DATA_ID = '" << *id << "'";
-        }
-        else if (const auto path = std::get_if<logical_path_t>(&data_object_option)) {
-            const auto dirname = path->parent_path().string();
-            q_str << " where COLL_NAME = '" << dirname << "'";
-            const auto basename = path->object_name().string();
-            q_str << " and DATA_NAME = '" << basename << "'";
-        }
-        else {
-            std::cerr << "Invalid data object option specified." << std::endl;
-            return -2;
-        }
-
-        const auto replica_option = get_replica_value(args[3], args[4]);
-        if (const auto num = std::get_if<replica_number_t>(&replica_option)) {
-            q_str << " and DATA_REPL_NUM = '" << *num << "'";
-        }
-        else if (const auto hier = std::get_if<resource_hierarchy_t>(&replica_option)) {
-            q_str << " and DATA_RESC_HIER = '" << *hier << "'";
-        }
-        else {
-            std::cerr << "Invalid replica option specified." << std::endl;
-            return -2;
-        }
-
-        if (veryVerbose) {
-            std::cout << "query:[" << q_str.str() << "]" << std::endl;
-        }
-
-        auto q = irods::experimental::query_builder{}
-            .zone_hint(Conn->clientUser.rodsZone)
-            .build<rcComm_t>(*Conn, q_str.str());
-
-        if (std::begin(q) == std::end(q)) {
-            std::cout << "No results found." << std::endl;
-            return -3;
-        }
-
-        size_t index = 0;
-        for (auto&& result : q) {
-            for (auto&& r : result) {
-                std::cout << genquery_attrs[index++].first << ": ";
-                std::cout << r << std::endl;
-            }
-        }
-    }
-    catch (const std::exception& e) {
-        std::cerr << "An error occurred:\n" << e.what() << std::endl;
-        return -2;
-    }
-    return 0;
-} // ls_replica
 
 constexpr auto is_timestamp_label(std::string_view _label) -> bool
 {
@@ -1266,10 +1197,6 @@ doCommand( char *cmdToken[], rodsArguments_t* _rodsArgs = 0 ) {
         show_resource(cmdToken[1]);
         return 0;
     }
-    if ( strcmp( cmdToken[0], "ls" ) == 0 ) {
-        ls_replica(cmdToken);
-        return 0;
-    }
     if ( strcmp( cmdToken[0], "lz" ) == 0 ) {
         show_zone(cmdToken[1]);
         return 0;
@@ -1435,24 +1362,6 @@ doCommand( char *cmdToken[], rodsArguments_t* _rodsArgs = 0 ) {
     if ( strcmp( cmdToken[0], "lq" ) == 0 ) {
         show_resource_quotas(cmdToken[1]);
         show_global_quotas(cmdToken[1]);
-        return 0;
-    }
-    if ( strcmp( cmdToken[0], "mkdir" ) == 0 ) {
-        if ( _rodsArgs->force == True ) {
-            int path_index = 1;
-#ifdef osx_platform
-            path_index = 2;
-#endif
-            generalAdmin( 0, "add", "dir",
-                          cmdToken[path_index], "",
-                          "", "",
-                          "", "",
-                          "", "" );
-        }
-        else {
-            usage( "mkdir" );
-        }
-
         return 0;
     }
 
@@ -1672,11 +1581,6 @@ doCommand( char *cmdToken[], rodsArguments_t* _rodsArgs = 0 ) {
         generalAdmin( 0, "rm", "resource", cmdToken[1], cmdToken[2], cmdToken[3], cmdToken[4], cmdToken[5], cmdToken[6], "", "", _rodsArgs );
         return 0;
     }
-    if ( strcmp( cmdToken[0], "rmdir" ) == 0 ) {
-        generalAdmin( 0, "rm", "dir", cmdToken[1], cmdToken[2],
-                      cmdToken[3], cmdToken[4], cmdToken[5], cmdToken[6], "", "" );
-        return 0;
-    }
     if ( strcmp( cmdToken[0], "rmuser" ) == 0 ) {
         generalAdmin( 0, "rm", "user", cmdToken[1],
                       cmdToken[2], cmdToken[3], cmdToken[4], cmdToken[5], cmdToken[6], "", "" );
@@ -1718,27 +1622,6 @@ doCommand( char *cmdToken[], rodsArguments_t* _rodsArgs = 0 ) {
             obfDecodeByKey( cmdToken[1], cmdToken[2], unscrambled );
             printf( "Unscrambled form is:%s\n", unscrambled );
         }
-        return 0;
-    }
-    if ( strcmp( cmdToken[0], "ctime" ) == 0 ) {
-        char myString[TIME_LEN];
-        if ( strcmp( cmdToken[1], "str" ) == 0 ) {
-            int status;
-            status = checkDateFormat( cmdToken[2] );
-            if ( status ) {
-                rodsLogError( LOG_ERROR, status, "ctime str:checkDateFormat error" );
-            }
-            printf( "Converted to local iRODS integer time: %s\n", cmdToken[2] );
-            return 0;
-        }
-        if ( strcmp( cmdToken[1], "now" ) == 0 ) {
-            char nowString[100];
-            getNowStr( nowString );
-            printf( "Current time as iRODS integer time: %s\n", nowString );
-            return 0;
-        }
-        getLocalTimeFromRodsTime( cmdToken[1], myString );
-        printf( "Converted to local time: %s\n", myString );
         return 0;
     }
     if ( strcmp( cmdToken[0], "rum" ) == 0 ) {
@@ -1825,20 +1708,6 @@ main( int argc, char **argv ) {
     rodsArguments_t myRodsArgs;
     int status = parseCmdLineOpt( argc, argv, "fvVhZ", 1, &myRodsArgs );
 
-#ifdef osx_platform
-    // getopt has different behavior on OSX, we work around this for
-    // the one specific instance where mkdir is use with a force flag
-    // this will be refactored in the future to use the boost::program_options
-    // to remove the need for this gratuitous hack
-    if ( argc > 2 ) {
-        std::string sub_cmd   = argv[1];
-        std::string force_flg = argv[2];
-        if ( "mkdir" == sub_cmd && "-f" == force_flg ) {
-            myRodsArgs.force = True;
-        }
-    } // if argc
-#endif
-
     if ( status ) {
         fprintf( stderr, "Use -h for help.\n" );
         return 2;
@@ -1920,30 +1789,6 @@ main( int argc, char **argv ) {
                  status );
         return 1;
     }
-
-    if ( strcmp( cmdToken[0], "ctime" ) == 0 ) {
-        char myString[TIME_LEN];
-        if ( strcmp( cmdToken[1], "str" ) == 0 ) {
-            int status;
-            status = checkDateFormat( cmdToken[2] );
-            if ( status ) {
-                rodsLogError( LOG_ERROR, status, "ctime str:checkDateFormat error" );
-            }
-            printf( "Converted to local iRODS integer time: %s\n", cmdToken[2] );
-            return 0;
-        }
-        if ( strcmp( cmdToken[1], "now" ) == 0 ) {
-            char nowString[100];
-            getNowStr( nowString );
-            printf( "Current time as iRODS integer time: %s\n", nowString );
-            return 0;
-        }
-        getLocalTimeFromRodsTime( cmdToken[1], myString );
-        printf( "Converted to local time: %s\n", myString );
-        return 0;
-    }
-
-    /* need to copy time convert commands up here too */
 
     // =-=-=-=-=-=-=-
     // initialize pluggable api table
@@ -2058,7 +1903,6 @@ void usageMain() {
         " luan Name (list users associated with auth name (GSI/Kerberos)",
         " lt [name] [subname] (list token info)",
         " lr [name] (list resource info)",
-        " ls [logical_path <string>|data_id <int>] [replica_number <int>|resource_hierarchy <string>] (list replica info)",
         " lz [name] (list zone info)",
         " lg [name] (list group info (user member list))",
         " lgd name  (list group details)",
@@ -2068,7 +1912,6 @@ void usageMain() {
         " rua Name[#Zone] Auth-Name (remove user authentication name (GSI/Kerberos)",
         " rpp Name  (remove PAM-derived Password for user Name)",
         " rmuser Name[#Zone] (remove user, where userName: name[@department][#zone])",
-        " rmdir Name (remove directory) ",
         " mkresc Name Type [Host:Path] [ContextString] (make Resource)",
         " modresc Name [name, type, host, path, status, comment, info, free_space, context, rebalance] Value (mod Resc)",
         " modrescdatapaths Name oldpath newpath [user] (update data-object paths,",
@@ -2088,7 +1931,6 @@ void usageMain() {
         " rt tokenNamespace Name [Value1] (remove token) ",
         " spass Password Key (print a scrambled form of a password for DB)",
         " dspass Password Key (descramble a password and print it)",
-        " ctime Time (convert an iRODS time (integer) to local time; & other forms)",
         " suq User Target Value (set user quota)",
         " sgq Group Target Value (set group quota)",
         " lq [Name] List Quotas",
@@ -2165,18 +2007,6 @@ usage( char *subOpt ) {
         "lr [name] (list resource info)",
         "Just 'lr' briefly lists the defined resources.",
         "If you include a resource name, it will list more detailed information.",
-        ""
-    };
-    char *lsMsgs[] = {
-        "ls [logical_path <string>|data_id <int>] [replica_number <int>|resource_hierarchy <string>] (list replica info)",
-        "List attributes of a replica in the catalog.",
-        " ",
-        "The logical_path must refer to a data object registered in the catalog.",
-        " ",
-        "The replica to modify must be specified. There are 2 options for doing so:",
-        "    1. replica_number - An integer representing the replica number",
-        "    2. resource - Resource hierarchy hosting the target replica",
-        " ",
         ""
     };
     char *lzMsgs[] = {
@@ -2280,20 +2110,6 @@ usage( char *subOpt ) {
     char *rmuserMsgs[] = {
         " rmuser Name[#Zone] (remove user, where userName: name[@department][#zone])",
         " Remove an iRODS user.",
-        ""
-    };
-
-    char *mkdirMsgs[] = {
-        "***************************** WARNING ********************************",
-        "This command is intended for installation purposes and should never be",
-        "called directly by a user.  In order to make a collection please use",
-        "the 'imkdir' icommand.",
-        ""
-    };
-
-    char *rmdirMsgs[] = {
-        " rmdir Name (remove directory) ",
-        "This is similar to 'irm -f'.",
         ""
     };
 
@@ -2434,11 +2250,9 @@ usage( char *subOpt ) {
         "must previously exist and there can be only one local zone definition.",
         "Connection-info (hostname:port) and a Comment field are optional.",
         " ",
-        "The connection-info should be the hostname of the ICAT-Enabled-Server (IES)",
-        "of the zone.  If it is a non-IES, remote users trying to connect will get",
-        "a CAT_INVALID_USER error, even if valid, due to complications in the",
-        "way the protocol connections operate when the local server tries to",
-        "connect back to the remote zone to authenticate the user.",
+        "The connection-info should be the hostname of a Catalog Service Provider",
+        "of the zone.  If it is a Catalog Service Consumer, remote users trying to",
+        "connect will get a CAT_INVALID_USER error.",
         " ",
         "Also see modzone, rmzone, and lz.",
         ""
@@ -2449,8 +2263,8 @@ usage( char *subOpt ) {
         "Modify values in a zone definition, either the name, conn (connection-info),",
         "or comment.  Connection-info is the DNS host string:port, for example:",
         "irods.example.org:1247",
-        "When modifying the conn information, it should be the hostname of the",
-        "ICAT-Enabled-Server (IES); see 'h mkzone' for more.",
+        "When modifying the conn information, it should be the hostname of a",
+        "Catalog Service Provider; see 'h mkzone' for more.",
         " ",
         "The name of the local zone can be changed via some special processing and",
         "since it also requires some manual changes, iadmin will explain those and",
@@ -2551,24 +2365,6 @@ usage( char *subOpt ) {
         " rt tokenNamespace Name [Value] (remove token) ",
         "Remove a token.  The most common use of this is to remove",
         "data_type or user_type tokens.  See lt to display currently defined tokens.",
-        ""
-    };
-
-    char *ctimeMsgs[] = {
-        " ctime Time (convert a iRODSTime value (integer) to local time",
-        "Time values (modify times, access times) are stored in the database",
-        "as a Unix Time value.  This is the number of seconds since 1970 and",
-        "is the same in all time zones (basically, Coordinated Universal Time).",
-        "ils and other utilities will convert it before displaying it, but iadmin",
-        "displays the actual value in the database.  You can enter the value to",
-        "the ctime command to convert it to your local time.  The following two",
-        "additional forms can also be used:",
-        " ",
-        " ctime now      - convert a current time to an iRODS time integer value.",
-        " ",
-        " ctime str Timestr  - convert a string of the format Timestr",
-        " (YYYY-MM-DD.hh:mm:ss) to an iRODS integer value time.",
-        " ",
         ""
     };
 
@@ -2804,8 +2600,6 @@ usage( char *subOpt ) {
                        "rua",
                        "rpp",
                        "rmuser",
-                       "mkdir",
-                       "rmdir",
                        "mkresc",
                        "modresc",
                        "modrescdatapaths",
@@ -2824,7 +2618,6 @@ usage( char *subOpt ) {
                        "rt",
                        "spass",
                        "dspass",
-                       "ctime",
                        "suq",
                        "sgq",
                        "lq",
@@ -2846,7 +2639,6 @@ usage( char *subOpt ) {
                       luzMsgs,
                       ltMsgs,
                       lrMsgs,
-                      lsMsgs,
                       lzMsgs,
                       lgMsgs,
                       lgdMsgs,
@@ -2856,8 +2648,6 @@ usage( char *subOpt ) {
                       ruaMsgs,
                       rppMsgs,
                       rmuserMsgs,
-                      mkdirMsgs,
-                      rmdirMsgs,
                       mkrescMsgs,
                       modrescMsgs,
                       modrescDataPathsMsgs,
@@ -2876,7 +2666,6 @@ usage( char *subOpt ) {
                       rtMsgs,
                       spassMsgs,
                       dspassMsgs,
-                      ctimeMsgs,
                       suqMsgs,
                       sgqMsgs,
                       lqMsgs,
