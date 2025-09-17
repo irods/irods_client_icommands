@@ -1,14 +1,9 @@
-/*** Copyright (c), The Regents of the University of California            ***
- *** For more information please refer to files in the COPYRIGHT directory ***/
-/*
-  Simple command to get the misc server info.
-  Tests connecting to the server.
-*/
-
-#include <irods/rodsClient.h>
-#include <irods/parseCommandLine.h>
 #include <irods/irods_client_api_table.hpp>
 #include <irods/irods_pack_table.hpp>
+#include <irods/parseCommandLine.h>
+#include <irods/rcConnect.h>
+#include <irods/rodsClient.h>
+#include <irods/version.hpp>
 
 #include <nlohmann/json.hpp>
 
@@ -58,6 +53,12 @@ main( int argc, char **argv ) {
 
     if ( Conn == NULL ) {
         exit( 2 );
+    }
+
+    if (const auto vers = irods::to_version(Conn->svrVersion->relVersion); vers && *vers < irods::version{4, 3, 4}) {
+        rodsLog(LOG_ERROR, "Connected server is incompatible. Must be iRODS 4.3.4 or later.");
+        rcDisconnect(Conn);
+        return 1;
     }
 
     status = rcGetMiscSvrInfo( Conn, &miscSvrInfo );
