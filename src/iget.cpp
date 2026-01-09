@@ -29,7 +29,6 @@ main( int argc, char **argv ) {
     rErrMsg_t errMsg;
     rcComm_t *conn;
     rodsArguments_t myRodsArgs;
-    rodsPathInp_t rodsPathInp;
     int reconnFlag;
 
 
@@ -40,6 +39,7 @@ main( int argc, char **argv ) {
         return 1;
     }
 
+    rodsPathInp_t rodsPathInp{};
     const auto free_rodsPathInp = irods::at_scope_exit{[&rodsPathInp] { freeRodsPathInpMembers(&rodsPathInp); }};
     int p_err = parse_opts_and_paths(
                     argc,
