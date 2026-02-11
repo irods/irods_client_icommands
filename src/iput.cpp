@@ -1,9 +1,3 @@
-/*** Copyright (c), The Regents of the University of California            ***
- *** For more information please refer to files in the COPYRIGHT directory ***/
-/*
- * iput - The irods put utility
-*/
-
 #include <irods/rodsClient.h>
 #include <irods/rodsError.h>
 #include <irods/parseCommandLine.h>
@@ -222,7 +216,7 @@ usage( FILE* _fout ) {
         " --lfrestart lfRestartFile - specifies that the large file restart option is",
         "       on and the lfRestartFile input specifies a local file that contains",
         "       the restart information.",
-        " --wlock - use advisory write (exclusive) lock for the upload",
+        " --wlock - [Deprecated] use advisory write (exclusive) lock for the upload",
         " --kv_pass - pass quoted key-value strings through to the resource hierarchy,",
         "             of the form key1=value1;key2=value2",
         " --metadata - atomically assign metadata after a data object is registered in",

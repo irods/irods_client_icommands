@@ -1,9 +1,3 @@
-/*** Copyright (c), The Regents of the University of California            ***
- *** For more information please refer to files in the COPYRIGHT directory ***/
-/*
- * iget - The irods get utility
-*/
-
 #include <irods/rodsClient.h>
 #include <irods/rodsError.h>
 #include <irods/parseCommandLine.h>
@@ -178,7 +172,6 @@ usage( FILE* _fout ) {
         "sockets getting timed out by the firewall as reported by some users.",
         " ",
         "Options are:",
-
         " -f  force - write local files even it they exist already (overwrite them)",
         " -I  redirect connection - redirect the connection to connect directly",
         "       to the best (determined by the first 10 data objects in the input",
@@ -207,7 +200,7 @@ usage( FILE* _fout ) {
         "      on and the lfRestartFile input specifies a local file that contains",
         "      the restart info.",
         " -t  ticket - ticket (string) to use for ticket-based access.",
-        " --rlock - use advisory read lock for the download",
+        " --rlock - [Deprecated] use advisory read lock for the download",
         " --kv_pass - pass quoted key-value strings through to the resource hierarchy,",
         "             of the form key1=value1;key2=value2",
         " -h  this help",

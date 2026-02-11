@@ -1,9 +1,3 @@
-/*** Copyright (c), The Regents of the University of California            ***
- *** For more information please refer to files in the COPYRIGHT directory ***/
-/*
- * irepl - The irods repl utility
- */
-
 #include <irods/rodsClient.h>
 #include <irods/rodsError.h>
 #include <irods/parseCommandLine.h>
@@ -194,7 +188,7 @@ usage() {
         "     restartFile input specifies a local file that contains the restart info.",
         " --purgec  Purge the staged cache copy after replicating an object to a",
         "     COMPOUND resource",
-        " --rlock - use advisory read lock for the replication",
+        " --rlock - [Deprecated] use advisory read lock for the replication",
         " -h  this help",
         " ",
         "Also see 'irsync' for other types of iRODS/local synchronization.",
