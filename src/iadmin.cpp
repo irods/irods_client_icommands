@@ -2051,9 +2051,13 @@ printMsgs( char *msgs[] ) {
 void usageMain() {
     char *Msgs[] = {
         "Usage: iadmin [-hvV] [command]",
+        " ",
         "A blank execute line invokes the interactive mode, where it",
         "prompts and executes commands until 'quit' or 'q' is entered.",
         "Single or double quotes can be used to enter items with blanks.",
+        " ",
+        "Note: ctime, mkdir, rmdir, and ls are deprecated.",
+        " ",
         "Commands are:",
         " lu [name[#Zone]] (list user info; details if name entered)",
         " lua [name[#Zone]] (list user authentication (GSI/Kerberos Names, if any))",
@@ -2104,8 +2108,10 @@ void usageMain() {
         " get_grid_configuration NAMESPACE OPTION_NAME",
         " set_grid_configuration NAMESPACE OPTION_NAME OPTION_VALUE",
         " help (or h) [command] (this help, or more details on a command)",
+        " ",
         "Also see 'irmtrash -M -u user' for the admin mode of removing trash and",
         "similar admin modes in irepl, iphymv, and itrim.",
+        " ",
         "The admin can also alias as any user via the 'clientUserName' environment",
         "variable.",
         ""
@@ -2171,6 +2177,9 @@ usage( char *subOpt ) {
     };
     char *lsMsgs[] = {
         "ls [logical_path <string>|data_id <int>] [replica_number <int>|resource_hierarchy <string>] (list replica info)",
+        " ",
+        "This command is deprecated.",
+        " ",
         "List attributes of a replica in the catalog.",
         " ",
         "The logical_path must refer to a data object registered in the catalog.",
@@ -2286,6 +2295,8 @@ usage( char *subOpt ) {
     };
 
     char *mkdirMsgs[] = {
+        "This command is deprecated.",
+        " ",
         "***************************** WARNING ********************************",
         "This command is intended for installation purposes and should never be",
         "called directly by a user.  In order to make a collection please use",
@@ -2295,6 +2306,9 @@ usage( char *subOpt ) {
 
     char *rmdirMsgs[] = {
         " rmdir Name (remove directory) ",
+        " ",
+        "This command is deprecated.",
+        " ",
         "This is similar to 'irm -f'.",
         ""
     };
@@ -2556,6 +2570,9 @@ usage( char *subOpt ) {
 
     char *ctimeMsgs[] = {
         " ctime Time (convert a iRODSTime value (integer) to local time",
+        " ",
+        "This command is deprecated.",
+        " ",
         "Time values (modify times, access times) are stored in the database",
         "as a Unix Time value.  This is the number of seconds since 1970 and",
         "is the same in all time zones (basically, Coordinated Universal Time).",
