@@ -75,11 +75,15 @@ int main(int argc, char** argv){
         // Currently this does not work because the object_status is not initialized with the necessary information to
         // display this properly.
         //        ("acl,A", po::bool_switch(), "Print the access control information for each object")
-        ("json,J", po::bool_switch(), "Produce json instead of a human readable output")
+        ("json,j", po::bool_switch(), "Produce json instead of a human readable output")
         ("color,C", po::bool_switch(), "Print in color (requires ansi terminal)");
     try{
+        std::vector<std::string> args;
+        for (int i = 1; i < argc; ++i) {
+            args.push_back(std::string(argv[i]) == "-J" ? "-j" : argv[i]);
+        }
         po::variables_map vm;
-        po::store(po::command_line_parser(argc,argv).options(desc).positional(pod).run(),vm);
+        po::store(po::command_line_parser(args).options(desc).positional(pod).run(),vm);
         po::notify(vm);
         if( vm.count("help") ) {
             print_usage();
@@ -363,7 +367,7 @@ Options:
       --indent=INTEGER
                   The number of spaces used for indenting nested collections.
                   (defaults to 2).
-  -J, --json      Print collection tree as JSON.
+  -j, --json      Print collection tree as JSON. (-J is deprecated and will be removed in iRODS 6.)
   -L, --depth=INTEGER
                   Limit the depth of the listing (defaults to 1000).
   -p, --pattern-regex=PATTERN
